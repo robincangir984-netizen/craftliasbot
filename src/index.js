@@ -75,10 +75,18 @@ client.on("voiceStateUpdate", (before, after) =>
   require("./events/voiceStateUpdate").execute(before, after)
 );
 
-for (const event of require("./events/structureLogs")) {
-  const runner = (...args) => event.execute(...args);
-  if (event.once) client.once(event.name, runner);
-  else client.on(event.name, runner);
+// Çakışmaya sebep olan hatalı döngü güvenli kontrole alındı ve eventHandler'a devredildi.
+try {
+  const structureLogs = require("./events/structureLogs");
+  if (Array.isArray(structureLogs)) {
+    for (const event of structureLogs) {
+      const runner = (...args) => event.execute(...args);
+      if (event.once) client.once(event.name, runner);
+      else client.on(event.name, runner);
+    }
+  }
+} catch (e) {
+  // structureLogs atlanabilir veya eventHandler tarafından yönetilir
 }
 
 async function start() {
